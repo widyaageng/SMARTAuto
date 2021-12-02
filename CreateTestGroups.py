@@ -124,7 +124,7 @@ def getTestGroupNumber():
                 paramIdx += 1
 
 
-    with open('SyncedNGRPLC.ini', 'w') as newConfigFile:
+    with open('newExportConfigure.ini', 'w') as newConfigFile:
         config.write(newConfigFile)
 
 

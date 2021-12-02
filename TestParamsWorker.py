@@ -4,8 +4,21 @@ from selenium.webdriver.support.ui import Select
 from pathlib import Path
 import os
 import re
-
+import configparser
+from collections import OrderedDict
 ##########################################
+
+
+################################# UTILS #################################
+
+def flatten(xs):
+    result = []
+    if isinstance(xs, (list, tuple)):
+        for x in xs:
+            result.extend(flatten(x))
+    else:
+        result.append(xs)
+    return result
 
 # webdriver setting
 # TEMPLATE: http://rws01442418/SMART/ManageTestGroups?toolType=<commaseparatedtooltype>&toolSubType=<testedPN>}
@@ -16,6 +29,8 @@ smartweb = f"http://rws01442418/SMART/ManageTestGroups?toolType={DUTName}&toolSu
 driverPath = os.path.join(str(Path.cwd()), 'msedgedriver.exe')
 driver = webdriver.Edge(executable_path=driverPath)
 
+
+## constant declarations and retrieval from ini file
 unitsId = ['Degree C',
            'Counts',
            'Degrees',
@@ -45,27 +60,55 @@ unitsId = ['Degree C',
 
 
 # flatten test 
-groupId = [1832]  # input
+config = configparser.ConfigParser()
+configFileName = input("Enter .ini file that has been run after CreateTestGroups.py:\n")
+config.read(configFileName)
 
-testGroupId = [
-    "CAN Diag Test",
-    "20V 2A",
-    "35V 1A",
-    "48V 1A",
-    "15V PRI",
-    "15V Aux",
-    "15V PRI Power Test",
-    "SWRO Test",
-    "Sensor Test",
-    "MCC Test"]
+testCaseRaw = [i for i in config['TESTGROUP']]
+mainTest = [config['TESTGROUP'][i].split(",") for i in testCaseRaw]
 
-paramsUnit = ["Voltage"]
-paramsName = ["PS Voltage"]
-paramsLimitType = ["Double"]
-paramsNum = ["101"]
-paramspfEvaluated = [True]
-paramsDescription = ["Power taken from Main PS"]
-paramsCreateOuterHTMLAttr = ["submit", "Create"]
+for i,e in enumerate(mainTest):
+    prefix = ''
+    if (len(e) > 1):
+        prefix = testCaseRaw[i] + "-"
+    else:
+        prefix = testCaseRaw[i]
+    for k,j in enumerate(e):
+        e[k] = prefix + j
+
+mainTest = flatten(mainTest)
+
+exceptionKeys = {'Group Number', 'Group Id'}
+groupId = []
+tempDict = {}
+
+## Main param library
+testParamDict = []
+for i in mainTest:
+    tempDict = OrderedDict(zip(config['CAN Diag Test'].keys(), config['CAN Diag Test'].values()))
+    for j,key in enumerate(tempDict.keys()):
+        if key in exceptionKeys:
+            pass
+        else:
+            tempArgs = tempDict[key].split(',')
+            testParamDict.append(OrderedDict({
+                'TestGroupId': i,
+                'Units': tempArgs[0],
+                'Parameter': key,
+                'Limit Type': tempArgs[1],
+                'Parameter#': tempArgs[2],
+                'PF Evaluated': tempArgs[3]
+            }))
+
+"""TODO:
+1. Run driver, separated by TestGroupId to move between testgroups in testgroups page
+2. Render the necessary parameters from library testParamDict to run all nethods below
+3. Take note on separation between moving from testgrups page to test paramaters page
+   Using: <a href="/SMART/ManageTestGroups?toolType={DUT Name  sub space with %20}&amp;toolSubType={DUTPartNUmber}">Back to Test Groups</a>
+
+"""
+
+    
 
 
 def xpath_testparam_listgen(groupIdarg):
