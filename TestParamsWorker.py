@@ -95,6 +95,7 @@ for i in mainTest:
         else:
             tempArgs = tempDict[key].split(',')
             testParamDict.append(OrderedDict({
+                'GroupId': tempDict['Group Id'],
                 'TestGroupId': i,
                 'Units': tempArgs[0],
                 'Parameter': key,
@@ -116,14 +117,14 @@ groupId.sort()
 def xpath_testparam_listgen(groupIdarg):
     return [
         f"//a[contains(@href, 'ManageTestParameters/Index?groupId={groupIdarg}')]",
-        f"//a[contains(@href, 'ManageTestParameters/Create?groupId={groupIdarg}')]",
-        f"//select[contains(@name, 'TestGroupId')]",
-        f"//select[contains(@name, 'UnitsId')]",
-        f"//input[contains(@name, 'ParameterName')]",
-        f"//select[contains(@name, 'LimitDataTypeId')]",
-        f"//input[contains(@name, 'ParameterNumber')]",
-        f"//input[contains(@name, 'PassOrFailEvaluated')]",
-        f"//input[contains(@type, 'submit') and contains(@value, 'Create')]"
+        f"//a[contains(@href, 'ManageTestParameters/Create?groupId={groupIdarg}')]"
+        # f"//select[contains(@name, 'TestGroupId')]",
+        # f"//select[contains(@name, 'UnitsId')]",
+        # f"//input[contains(@name, 'ParameterName')]",
+        # f"//select[contains(@name, 'LimitDataTypeId')]",
+        # f"//input[contains(@name, 'ParameterNumber')]",
+        # f"//input[contains(@name, 'PassOrFailEvaluated')]",
+        # f"//input[contains(@type, 'submit') and contains(@value, 'Create')]"
     ]
 """Do I need to create wrapper on every time
 it lands on the page with the name of parameter already exists.
@@ -137,66 +138,128 @@ Probably the easier method (brute):
 xpath_testparam_list = [xpath_testparam_listgen(i) for i in groupId]
 driver.get(smartweb)
 
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][0])
-if (elem.text == 'Test Parameters'):
-    elem.click()
-else:
-    raise Exception("It's not landed into test paramater!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][1])
-if (elem.text == 'Create New'):
-    elem.click()
-else:
-    raise Exception("It's not landed into create new test parameter!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][2])
-if (elem.text.split(" ")[0] == testGroupId[0].split(" ")[0]):
-    selectElem = Select(elem)
-    selectElem.select_by_visible_text(testGroupId[1])
-else:
-    raise Exception("It's not landed into selectable test cases!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][3])
-if (elem.text.split(" ")[0] == unitsId[0].split(" ")[0]):
-    selectElem = Select(elem)
-    selectElem.select_by_visible_text(paramsUnit[0])
-else:
-    raise Exception("It's not landed into Units selectable units!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][4])
-if (elem.get_attribute('id') == 'ParameterName'):
-    elem.send_keys(paramsName[0])
-else:
-    raise Exception("It's not landed into input field Parameter#!")
-
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][5])
-if (elem.get_attribute('id') == 'LimitDataTypeId'):
-    selectElem = Select(elem)
-    selectElem.select_by_visible_text(paramsLimitType[0])
-else:
-    raise Exception("It's not landed into Parameter Limit Type selectable!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][6])
-if (elem.get_attribute('id') == 'ParameterNumber'):
-    elem.clear()
-    elem.send_keys(paramsNum[0])
-else:
-    raise Exception("It's not landed into field Parameter#!")
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][7])
-if (elem.get_attribute('id') == 'PassOrFailEvaluated'):
-    if(paramspfEvaluated[0]):
+"""Clicking test parameters on the same row as test group"""
+def goToTestGroup(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//a[contains(@href, 'ManageTestParameters/Index?groupId={testParamObj[idx]['GroupId']}')]")
+    if (elem.text == 'Test Parameters'):
         elem.click()
-else:
-    raise Exception("It's not landed into field P/F Evaluated Parameter#!")
+    else:
+        raise Exception("It's not landed into test paramater!")
 
-
-elem = driver.find_element_by_xpath(xpath_testparam_list[0][8])
-elemOuterHtml = elem.get_attribute('outerHTML')
-elemAttritbueValue = re.findall(("\=\"[a-zA-Z]+\""))
-if (elem.get_attribute('id') == 'PassOrFailEvaluated'):
-    if(all(a == b for a, b in zip(elemAttritbueValue, paramsCreateOuterHTMLAttr))):
+""" ENTRY: To create new param based on groupNumber index in groupId array"""
+def createNewParam(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//a[contains(@href, 'ManageTestParameters/Create?groupId={testParamObj[idx]['GroupId']}')]")
+    if (elem.text == 'Create New'):
         elem.click()
-else:
-    raise Exception("It's not landed into \'Create\' submit type!")
+    else:
+        raise Exception("It's not landed into create new test parameter!")
+
+""" ENTRY: To edit existing param"""
+def goEditParam(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//td[contains(text(), '{testParamObj[idx]['Parameter']}')]//parent::tr/td[8]/a")
+    if (elem.tag_name == 'a' and elem.text == 'Edit'):
+        elem.click()
+    else:
+        raise Exception("It's not landed into Edit button!")
+
+""" To save edited param"""
+def saveEditParam():
+    elem = driver.find_element_by_xpath(f"//input[contains(@type, 'submit') and contains(@value, 'Save')]")
+    elemAttritbuteValue = elem.get_attribute('value')
+    if (elemAttritbuteValue == 'Save'):
+        elem.click()
+    else:
+        raise Exception("It's not landed into \'Save\' submit type!")
+
+"""############################ To Iterate thru testParamDict ############################"""
+""" To select TestGroupId """
+def selectTestGroupId(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//select[contains(@name, 'TestGroupId')]")
+    if (elem.text.split("\n")[0] == testParamDict[0]['TestGroupId'].split("-")[-1]):
+        selectElem = Select(elem)
+        selectElem.select_by_visible_text(testParamObj[idx]['TestGroupId'].split("-")[-1])
+    else:
+        raise Exception("It's not landed into selectable test cases!")
+
+""" To select Units """
+def selectUnit(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//select[contains(@name, 'UnitsId')]")
+    if (elem.text.split(" ")[0] == unitsId[0].split(" ")[0]):
+        selectElem = Select(elem)
+        selectElem.select_by_visible_text(testParamObj[idx]['Units'])
+    else:
+        raise Exception("It's not landed into Units selectable units!")
+
+""" To enter Parameter Name """
+def enterParameterName(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//input[contains(@name, 'ParameterName')]")
+    if (elem.get_attribute('id') == 'ParameterName'):
+        elem.clear()
+        elem.send_keys(testParamObj[idx]['Parameter'])
+    else:
+        raise Exception("It's not landed into input field Parameter#!")
+
+""" To select Limit Type """
+def selectLimitType(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//select[contains(@name, 'LimitDataTypeId')]")
+    if (elem.get_attribute('id') == 'LimitDataTypeId'):
+        selectElem = Select(elem)
+        selectElem.select_by_visible_text(testParamObj[idx]['Limit Type'])
+    else:
+        raise Exception("It's not landed into Parameter Limit Type selectable!")
+
+""" To select Parameter Number """
+def selectParameterNumber(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//input[contains(@name, 'ParameterNumber')]")
+    if (elem.get_attribute('id') == 'ParameterNumber'):
+        elem.clear()
+        elem.send_keys(testParamObj[idx]['Parameter#'])
+    else:
+        raise Exception("It's not landed into field Parameter#!")
+
+""" To select P/F evaluated """
+def selectPFEvaluated(idx, testParamObj):
+    elem = driver.find_element_by_xpath(f"//input[contains(@name, 'PassOrFailEvaluated')]")
+    if (elem.get_attribute('id') == 'PassOrFailEvaluated'):
+        if (str(elem.is_selected()) != testParamObj[idx]['PF Evaluated']):
+            elem.click()
+    else:
+        raise Exception("It's not landed into field P/F Evaluated Parameter#!")
+
+""" To submit form by clicking create button """
+def createAndSubmitParam():
+    elem = driver.find_element_by_xpath(f"//input[contains(@type, 'submit') and contains(@value, 'Create')]")
+    elemAttritbuteValue = elem.get_attribute('value')
+    if (elemAttritbuteValue == 'Create'):
+        elem.click()
+    else:
+        raise Exception("It's not landed into \'Create\' submit type!")
+
+""" To go back to List of Params """
+def goBackToList():
+    elem = driver.find_element_by_xpath(f"//a[contains(text(), 'Back to List')]")
+    if (elem.text == 'Back to List'):
+        elem.click()
+    else:
+        raise Exception("It's not landed into Back to List button!")
+
+""" To go back to Test Groups"""
+def goBackToTestGroups():
+    elem = driver.find_element_by_xpath(f"//a[contains(text(), 'Back to Test Groups')]")
+    if (elem.text == 'Back to Test Groups'):
+        elem.click()
+    else:
+        raise Exception("It's not landed into Back to Test Groups button!")
+
+
+def createNewParamRoutine(idx, testParamObj):
+    goToTestGroup(idx, testParamObj)
+    createNewParam(idx, testParamObj)
+    selectTestGroupId(idx, testParamObj)
+    selectUnit(idx, testParamObj)
+    enterParameterName(idx, testParamObj)
+    selectLimitType(idx, testParamObj)
+    selectParameterNumber(idx, testParamObj)
+    selectPFEvaluated(idx, testParamObj)
+    createAndSubmitParam()
+    goBackToTestGroups()
