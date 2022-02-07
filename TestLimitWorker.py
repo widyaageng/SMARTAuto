@@ -70,6 +70,6 @@ def scrapeSQLParamNumber():
             tempParamNumber = re.findall('toolSubType=\d+&parameter=(\d+)&tempGroupId=\d+$', elem.get_attribute('href'))[-1]
             SQLParamHTMLScan.append(f"&parameter={tempParamNumber}&tempGroupId=")
     except:
-        raise IndexError('Regex group index is out of range: Invalid number from href!')
+        raise IndexError('Regex group index is out of range: Invalid number from href')
     
     return paramName,SQLParamHTMLScan
