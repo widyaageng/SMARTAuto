@@ -20,9 +20,13 @@ driver = webdriver.Edge(executable_path=driverPath)
 time.sleep(2)
 driver.get(smartweb)
 
+SQLParamHTMLScan = []
+
 
 """ Navigate and pull the limit of UUT """
 def selectUUTLimitTable(DUTName, UUTSubType, TestLimitVersions):
+    smartweb = f"http://rws01442418/SMART/ManageTestLimits"
+    driver.get(smartweb)
     elem = driver.find_element_by_xpath(f"//select[contains(@name, 'toolType')]")
     if DUTName in elem.text.split("\n"):
         selectElem = Select(elem)
@@ -52,3 +56,20 @@ def selectUUTLimitTable(DUTName, UUTSubType, TestLimitVersions):
         elem.click()
     else:
         raise Exception("It's not landed into Filter button!")
+
+def scrapeSQLParamNumber():
+    elems = driver.find_elements_by_xpath("//tbody/tr/td/a[contains(@href, '&tempGroupId=')]")
+
+    SQLParamHTMLScan = []
+
+    paramName = [e.find_element_by_xpath("../../td/following-sibling::td[1]").text for e in elems]
+    paramHTML = [e.get_attribute('href') for e in elems]
+
+    try:
+        for idx, elem in enumerate(paramHTML):
+            tempParamNumber = re.findall('toolSubType=\d+&parameter=(\d+)&tempGroupId=\d+$', elem.get_attribute('href'))[-1]
+            SQLParamHTMLScan.append(f"&parameter={tempParamNumber}&tempGroupId=")
+    except:
+        raise IndexError('Regex group index is out of range: Invalid number from href!')
+    
+    return paramName,SQLParamHTMLScan

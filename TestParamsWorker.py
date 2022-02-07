@@ -103,37 +103,29 @@ for i in mainTest:
                 'Parameter#': tempArgs[2],
                 'PF Evaluated': tempArgs[3]
             }))
+            
+            """ To include ambient limits if any """
+            if len(tempArgs)==6:
+                testParamDict[-1]['AmbientLimit'] = [tempArgs[4], tempArgs[5]]
+            
+            """ To include cold limits if any """
+            if len(tempArgs)==8:
+                testParamDict[-1]['ColdLimit'] = [tempArgs[6], tempArgs[7]]
+            
+            """ To include hot limits if any """
+            if len(tempArgs)==10:
+                testParamDict[-1]['HotLimit'] = [tempArgs[8], tempArgs[9]]
 
 groupId = list(set(groupId))
 groupId.sort()
-"""TODO:
-1. Run driver, separated by TestGroupId to move between testgroups in testgroups page
-2. Render the necessary parameters from library testParamDict to run all nethods below
-3. Take note on separation between moving from testgrups page to test paramaters page
-   Using: <a href="/SMART/ManageTestGroups?toolType={DUT Name  sub space with %20}&amp;toolSubType={DUTPartNUmber}">Back to Test Groups</a>
-"""
+
 
 
 def xpath_testparam_listgen(groupIdarg):
     return [
         f"//a[contains(@href, 'ManageTestParameters/Index?groupId={groupIdarg}')]",
         f"//a[contains(@href, 'ManageTestParameters/Create?groupId={groupIdarg}')]"
-        # f"//select[contains(@name, 'TestGroupId')]",
-        # f"//select[contains(@name, 'UnitsId')]",
-        # f"//input[contains(@name, 'ParameterName')]",
-        # f"//select[contains(@name, 'LimitDataTypeId')]",
-        # f"//input[contains(@name, 'ParameterNumber')]",
-        # f"//input[contains(@name, 'PassOrFailEvaluated')]",
-        # f"//input[contains(@type, 'submit') and contains(@value, 'Create')]"
     ]
-"""Do I need to create wrapper on every time
-it lands on the page with the name of parameter already exists.
-Probably the easier method (brute):
-1. Scan all the parameter that already exist in the page
-2. Subtract the set of parameter that exist in page from list of paramater
-   supposed to be written from blank state
-
-"""
 
 xpath_testparam_list = [xpath_testparam_listgen(i) for i in groupId]
 driver.get(smartweb)
