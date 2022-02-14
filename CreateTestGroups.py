@@ -38,7 +38,7 @@ for key in testCaseDict.keys():
 
 def exitDriver():
     driver.quit()
-    exit("Forced Quite Error!")
+    exit("Forced quit Error!")
 
 def createTestGroup(grpIdxPtr, tstCsCount):
     for i in testCase:
