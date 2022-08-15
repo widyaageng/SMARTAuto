@@ -6,6 +6,7 @@ import os
 import re
 import configparser
 from collections import OrderedDict
+import pdb
 ##########################################
 
 
@@ -23,6 +24,8 @@ def flatten(xs):
 
 # webdriver setting
 # TEMPLATE: http://rws01442418/SMART/ManageTestGroups?toolType=<commaseparatedtooltype>&toolSubType=<testedPN>}
+# To Create Parameter based on ini file
+
 DUTName = input("Enter DUT Name, case- and space-sensitive:\n")
 DUTName = re.sub("\s+", "%20", DUTName)
 DUTPartNumber = input("Enter DUT PartNumber, usually 9 digit in CWI:\n")
@@ -262,3 +265,4 @@ def createNewParamRoutine(idx, testParamObj):
 
 for i in range(len(testParamDict)):
     createNewParamRoutine(i, testParamDict)
+    pdb.set_trace()
