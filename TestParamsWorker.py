@@ -6,6 +6,7 @@ import os
 import re
 import configparser
 from collections import OrderedDict
+import pdb
 ##########################################
 
 
@@ -23,9 +24,16 @@ def flatten(xs):
 
 # webdriver setting
 # TEMPLATE: http://rws01442418/SMART/ManageTestGroups?toolType=<commaseparatedtooltype>&toolSubType=<testedPN>}
+# To Create Parameter based on ini file
+
 DUTName = input("Enter DUT Name, case- and space-sensitive:\n")
 DUTName = re.sub("\s+", "%20", DUTName)
 DUTPartNumber = input("Enter DUT PartNumber, usually 9 digit in CWI:\n")
+# flatten test
+config = configparser.ConfigParser()
+configFileName = input(
+    "Enter .ini file that has been run after CreateTestGroups.py:\n")
+config.read(configFileName)
 smartweb = f"http://rws01442418/SMART/ManageTestGroups?toolType={DUTName}&toolSubType={DUTPartNumber}"
 driverPath = os.path.join(str(Path.cwd()), 'msedgedriver.exe')
 driver = webdriver.Edge(executable_path=driverPath)
@@ -60,11 +68,6 @@ unitsId = ['Degree C',
            'degree F']
 
 
-# flatten test
-config = configparser.ConfigParser()
-configFileName = input(
-    "Enter .ini file that has been run after CreateTestGroups.py:\n")
-config.read(configFileName)
 
 testCaseRaw = [i for i in config['TESTGROUP']]
 mainTest = [config['TESTGROUP'][i].split(",") for i in testCaseRaw]
@@ -108,13 +111,17 @@ for i in mainTest:
             if len(tempArgs)==6:
                 testParamDict[-1]['AmbientLimit'] = [tempArgs[4], tempArgs[5]]
             
-            """ To include cold limits if any """
-            if len(tempArgs)==8:
-                testParamDict[-1]['ColdLimit'] = [tempArgs[6], tempArgs[7]]
-            
             """ To include hot limits if any """
+            if len(tempArgs)==8:
+                testParamDict[-1]['AmbientLimit'] = [tempArgs[4], tempArgs[5]]
+                testParamDict[-1]['HotLimit'] = [tempArgs[6], tempArgs[7]]
+
+            """ To include cold limits if any """
             if len(tempArgs)==10:
-                testParamDict[-1]['HotLimit'] = [tempArgs[8], tempArgs[9]]
+                testParamDict[-1]['AmbientLimit'] = [tempArgs[4], tempArgs[5]]
+                testParamDict[-1]['HotLimit'] = [tempArgs[6], tempArgs[7]]
+                testParamDict[-1]['ColdLimit'] = [tempArgs[8], tempArgs[9]]
+            
 
 groupId = list(set(groupId))
 groupId.sort()
@@ -255,3 +262,7 @@ def createNewParamRoutine(idx, testParamObj):
     selectPFEvaluated(idx, testParamObj)
     createAndSubmitParam()
     goBackToTestGroups()
+
+for i in range(len(testParamDict)):
+    createNewParamRoutine(i, testParamDict)
+    pdb.set_trace()

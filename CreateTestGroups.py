@@ -1,4 +1,4 @@
-from selenium.webdriver import Edge
+from msedge.selenium_tools import Edge,EdgeOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 import os
@@ -27,6 +27,7 @@ testCaseDict = OrderedDict(zip(testCase, subTestCase))
 paramsGroupNumber = []
 groupIndexPointer = 0
 testCaseCounter = 0
+pdb.set_trace()
 
 for key in testCaseDict.keys():
     if (len(testCaseDict[key]) > 0):
@@ -38,7 +39,7 @@ for key in testCaseDict.keys():
 
 def exitDriver():
     driver.quit()
-    exit("Forced Quite Error!")
+    exit("Forced quit Error!")
 
 def createTestGroup(grpIdxPtr, tstCsCount):
     for i in testCase:
@@ -132,8 +133,13 @@ DUTName = input("Enter DUT Name, case- and space -sensitive:\n")
 DUTPartNUmber = input("Enter DUT PartNumber, usually 9 digit in CWI:\n")
 webaddress = f"http://rws01442418/SMART/ManageTestGroups"
 
-driver = Edge(executable_path=os.path.join(currentDirPath, "msedgedriver.exe"))
+options = EdgeOptions()
+options.use_chromium = True
+options.add_argument("--user-data-dir=C:\\Users\\H152690\\AppData\\Local\\Microsoft\\EdgeDriver\\User Data")
+options.add_argument("--start-maximized")
+driver = Edge(executable_path=os.path.join(currentDirPath, "msedgedriver.exe"), options=options)
 driver.get(webaddress)
+pdb.set_trace()
 
 elem = driver.find_element_by_xpath(f"//select[contains(@name, 'toolType')]")
 select = Select(elem)
@@ -145,5 +151,3 @@ groupIndexPointer, testCaseCounter = createTestGroup(groupIndexPointer, testCase
 getTestGroupNumber()
 driver.quit()
 exit
-
-
