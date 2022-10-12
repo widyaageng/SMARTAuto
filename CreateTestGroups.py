@@ -1,3 +1,4 @@
+#type: ignore
 from msedge.selenium_tools import Edge,EdgeOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
@@ -139,7 +140,6 @@ options.add_argument("--user-data-dir=C:\\Users\\H152690\\AppData\\Local\\Micros
 options.add_argument("--start-maximized")
 driver = Edge(executable_path=os.path.join(currentDirPath, "msedgedriver.exe"), options=options)
 driver.get(webaddress)
-pdb.set_trace()
 
 elem = driver.find_element_by_xpath(f"//select[contains(@name, 'toolType')]")
 select = Select(elem)

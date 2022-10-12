@@ -1,3 +1,4 @@
+#type: ignore
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
@@ -126,6 +127,7 @@ for i in mainTest:
 groupId = list(set(groupId))
 groupId.sort()
 
+pdb.set_trace()
 
 
 def xpath_testparam_listgen(groupIdarg):
@@ -265,4 +267,3 @@ def createNewParamRoutine(idx, testParamObj):
 
 for i in range(len(testParamDict)):
     createNewParamRoutine(i, testParamDict)
-    pdb.set_trace()
