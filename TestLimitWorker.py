@@ -1,3 +1,4 @@
+#type: ignore
 from unittest import TestCase
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
